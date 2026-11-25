@@ -14,18 +14,26 @@ uv sync
 
 ### Настройки
 
-Скопируйте `.env.example` в `.env` и впишите ключ Admin API из админки Keitaro.
+Скопируйте `.env.example` в `.env`:
+```
+cp .env.example .env
+```
 
-Обязательные:
+Впишите в `.env` свой ключ Admin API из админки Keitaro:
 ```
-API_KEY=ключ Admin API
-DB_HOST=хост PostgreSQL
-DB_PORT=порт PostgreSQL
-DB_USER=пользователь PostgreSQL
-DB_PASS=пароль PostgreSQL
-DB_NAME=имя базы
+API_KEY=ваш ключ
 ```
-Необязательные:
+
+Доступы к PostgreSQL для локальной разработки уже прописаны в `.env.example`, менять их не нужно: базу с такими доступами поднимет `docker compose up -d`.
+```
+DB_HOST=localhost
+DB_PORT=5433
+DB_USER=keitaro
+DB_PASS=keitaro
+DB_NAME=keitaro_wrapper
+```
+
+Необязательные настройки:
 ```
 BASE_URL=адрес трекера, по умолчанию https://keitaro-for-tests.etolegko.com
 DOMAIN_NAME=домен новых кампаний, по умолчанию первый из списка
