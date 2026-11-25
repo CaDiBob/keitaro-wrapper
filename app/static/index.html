@@ -222,7 +222,7 @@ $("#create-form").addEventListener("submit", async (event) => {
   }
 });
 
-const KT_ADMIN = "https://keitaro-for-tests.etolegko.com/admin/#!/campaign.editor/";
+const KT_ADMIN = "https://keitaro-for-tests.etolegko.com/admin/#!/campaign/";
 let selectedCampaign = null;
 let streams = [];
 
@@ -249,7 +249,7 @@ $("#fetch-btn").addEventListener("click", () => loadStreams(true));
 async function loadStreams(fetchFromKeitaro = false) {
   const box = $("#edit-msg"), button = $("#fetch-btn");
   box.hidden = true;
-  $("#kt-link").href = KT_ADMIN + selectedCampaign;
+  $("#kt-link").href = `${KT_ADMIN}${selectedCampaign}/main`;
   button.disabled = true;
   try {
     const path = `/campaigns/${selectedCampaign}/streams`;
