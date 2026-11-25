@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Keitaro wrapper</title>
+<style>
+  :root {
+    --bg: #f4f5f7; --card: #fff; --text: #1d2330; --muted: #6b7385; --line: #dfe2e8;
+    --accent: #2f6fed; --accent-dark: #2459c4; --ok: #1f8f4e; --err: #c62f2f; --chip: #eef2fb;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); }
+  main { max-width: 760px; margin: 0 auto; padding: 28px 16px 60px; }
+  h1 { font-size: 22px; margin: 0 0 18px; }
+  h2 { font-size: 16px; margin: 0 0 4px; }
+  .tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid var(--line); }
+  .tab { border: 0; background: none; padding: 10px 16px; font: inherit; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .tab.active { color: var(--accent); border-color: var(--accent); font-weight: 600; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 20px; margin-bottom: 14px; }
+  label { display: block; font-size: 13px; color: var(--muted); margin: 14px 0 5px; }
+  label:first-child { margin-top: 0; }
+  input, select { width: 100%; padding: 9px 11px; font: inherit; color: inherit; background: #fff; border: 1px solid var(--line); border-radius: 7px; }
+  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  @media (max-width: 560px) { .row { grid-template-columns: 1fr; } }
+  button.primary { margin-top: 18px; padding: 10px 22px; font: inherit; font-weight: 600; color: #fff; background: var(--accent); border: 0; border-radius: 7px; cursor: pointer; }
+  button.primary:hover { background: var(--accent-dark); }
+  button:disabled { opacity: .55; cursor: default; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .msg { margin-top: 14px; padding: 10px 12px; border-radius: 7px; font-size: 14px; overflow-wrap: anywhere; }
+  .msg.ok { background: #e9f6ee; color: var(--ok); }
+  .msg.err { background: #fbeaea; color: var(--err); }
+  .msg a { color: inherit; font-weight: 600; }
+  .ac { position: relative; }
+  .ac-list { position: absolute; z-index: 5; left: 0; right: 0; top: calc(100% + 3px); max-height: 280px; overflow: auto; background: #fff; border: 1px solid var(--line); border-radius: 7px; box-shadow: 0 6px 20px rgba(20, 30, 60, .12); }
+  .ac-item { padding: 8px 11px; cursor: pointer; font-size: 14px; }
+  .ac-item:hover, .ac-item.hl { background: var(--chip); }
+  .ac-empty { padding: 8px 11px; color: var(--muted); font-size: 14px; }
+  .id { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .stream { border-top: 1px solid var(--line); padding: 14px 0 4px; }
+  .stream:first-of-type { border-top: 0; padding-top: 6px; }
+  .stream-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .chip { font-size: 12px; background: var(--chip); color: var(--accent-dark); border-radius: 20px; padding: 2px 9px; }
+  .offer { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; padding: 7px 0; border-bottom: 1px dashed var(--line); }
+  .offer-name { overflow-wrap: anywhere; min-width: 0; }
+  .share { font-weight: 700; color: var(--ok); font-variant-numeric: tabular-nums; min-width: 46px; text-align: right; }
+  .del { border: 1px solid var(--line); background: #fff; color: var(--err); border-radius: 6px; width: 30px; height: 30px; cursor: pointer; font-size: 16px; line-height: 1; }
+  .del:hover:not(:disabled) { background: #fbeaea; }
+  .total { display: flex; justify-content: space-between; padding: 8px 0; font-size: 13px; color: var(--muted); }
+  .add { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-top: 6px; }
+  .add button { margin: 0; }
+  .muted { color: var(--muted); }
+  .url { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
+  .btn { padding: 7px 13px; font: inherit; font-size: 13px; font-weight: 600; color: var(--text); background: #fff; border: 1px solid var(--line); border-radius: 7px; cursor: pointer; text-decoration: none; white-space: nowrap; }
+  .btn:hover:not(:disabled) { background: var(--chip); }
+  .btn.blue { color: #fff; background: var(--accent); border-color: var(--accent); }
+  .btn.blue:hover:not(:disabled) { background: var(--accent-dark); }
+  .btn.red { color: var(--err); }
+  .stream-box { border: 1px solid var(--line); border-radius: 9px; padding: 12px 14px; margin-top: 12px; background: #fff; }
+  .stream-box.dirty { background: #fffbe0; border-color: #e6d680; }
+  .stream-title { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+  .stream-title small { color: var(--muted); }
+  .badge { font-size: 12px; font-weight: 600; color: #8a6d00; background: #fdf0a8; border-radius: 20px; padding: 2px 9px; }
+  .row-offer { display: grid; grid-template-columns: 1fr 52px 34px 118px; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px dashed var(--line); }
+  .row-offer.removed .offer-name, .row-offer.removed .share { color: #a6acb8; }
+  .pin { border: 0; background: none; cursor: pointer; font-size: 15px; padding: 4px; opacity: .28; filter: grayscale(1); }
+  .pin.on { opacity: 1; filter: none; }
+  .row-offer .btn { justify-self: end; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Keitaro wrapper</h1>
+  <div class="tabs">
+    <button class="tab active" data-tab="create">Новая кампания</button>
+    <button class="tab" data-tab="edit">Редактор офферов</button>
+  </div>
+
+  <section id="tab-create">
+    <form class="card" id="create-form" autocomplete="off">
+      <label for="c-name">Название</label>
+      <input id="c-name" required maxlength="255" placeholder="имя кампании">
+
+      <label for="c-geo">Гео</label>
+      <input id="c-geo" required placeholder="MX, AU, RO">
+      <div class="hint">Двухбуквенные коды стран через запятую. Трафик из этих стран уйдёт по ссылке ниже, остальной — на оффер.</div>
+
+      <label for="c-redirect">Куда отправлять трафик из этих стран</label>
+      <input id="c-redirect" required type="url" value="https://google.com">
+
+      <label for="c-offer">Оффер</label>
+      <div class="ac"><input id="c-offer" required placeholder="поиск по названию или ID"></div>
+
+      <button class="primary" id="create-btn">Создать</button>
+      <div id="create-msg" class="msg" hidden></div>
+    </form>
+  </section>
+
+  <section id="tab-edit" hidden>
+    <div class="card">
+      <label for="e-campaign">Кампания</label>
+      <select id="e-campaign"></select>
+      <div class="toolbar">
+        <button class="btn" id="fetch-btn">Fetch streams from KT</button>
+        <a class="btn" id="kt-link" target="_blank" rel="noopener">View in KT</a>
+      </div>
+      <div id="edit-msg" class="msg" hidden></div>
+      <div id="editor"></div>
+    </div>
+  </section>
+</main>
+
+<script>
+const $ = (selector) => document.querySelector(selector);
+const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+async function api(path, options = {}) {
+  if (options.body) {
+    options.headers = { "Content-Type": "application/json" };
+    options.body = JSON.stringify(options.body);
+  }
+  const response = await fetch(path, options);
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    const detail = data && data.detail;
+    const text = Array.isArray(detail) ? detail.map((d) => d.msg.replace(/^Value error, /, "")).join("; ") : detail;
+    throw new Error(text || `Ошибка ${response.status}`);
+  }
+  return data;
+}
+
+function show(box, kind, html) {
+  box.className = `msg ${kind}`;
+  box.innerHTML = html;
+  box.hidden = false;
+}
+
+let offersPromise = null;
+function allOffers() {
+  if (!offersPromise) offersPromise = api("/offers").catch(() => { offersPromise = null; return []; });
+  return offersPromise;
+}
+
+function attachOfferSearch(input, exclude = () => []) {
+  const list = document.createElement("div");
+  list.className = "ac-list";
+  list.hidden = true;
+  input.parentElement.append(list);
+  let items = [], hl = -1, timer;
+  input.offer = null;
+
+  const close = () => { list.hidden = true; hl = -1; };
+  const pick = (offer) => { input.offer = offer; input.value = `[${offer.id}] ${offer.name}`; close(); };
+  const render = () => {
+    list.innerHTML = items.length
+      ? items.map((o, i) => `<div class="ac-item${i === hl ? " hl" : ""}" data-i="${i}"><span class="id">[${o.id}]</span> ${esc(o.name)}</div>`).join("")
+      : `<div class="ac-empty">Ничего не найдено</div>`;
+    list.hidden = false;
+  };
+  const search = async () => {
+    const words = input.value.toLowerCase().split(/\s+/).filter(Boolean);
+    const skip = new Set(exclude());
+    items = (await allOffers())
+      .filter((o) => !skip.has(o.id) && words.every((w) => `${o.id} ${o.name}`.toLowerCase().includes(w)))
+      .slice(0, 20);
+    hl = items.length ? 0 : -1;
+    render();
+  };
+
+  input.addEventListener("input", () => { input.offer = null; clearTimeout(timer); timer = setTimeout(search, 150); });
+  input.addEventListener("focus", () => { if (!input.offer) search(); });
+  input.addEventListener("keydown", (event) => {
+    if (list.hidden) return;
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      if (items.length) { hl = (hl + (event.key === "ArrowDown" ? 1 : -1) + items.length) % items.length; render(); }
+    } else if (event.key === "Enter" && hl >= 0) { event.preventDefault(); pick(items[hl]); }
+    else if (event.key === "Escape") close();
+  });
+  list.addEventListener("mousedown", (event) => {
+    const row = event.target.closest(".ac-item");
+    if (row) { event.preventDefault(); pick(items[+row.dataset.i]); }
+  });
+  input.addEventListener("blur", close);
+}
+
+document.querySelectorAll(".tab").forEach((tab) => tab.addEventListener("click", () => openTab(tab.dataset.tab)));
+function openTab(name) {
+  document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.dataset.tab === name));
+  $("#tab-create").hidden = name !== "create";
+  $("#tab-edit").hidden = name !== "edit";
+  if (name === "edit") loadCampaigns();
+}
+
+attachOfferSearch($("#c-offer"));
+$("#create-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const box = $("#create-msg"), button = $("#create-btn"), offerInput = $("#c-offer");
+  if (!offerInput.offer) return show(box, "err", "Выберите оффер из выпадающего списка");
+  button.disabled = true;
+  try {
+    const campaign = await api("/campaigns", {
+      method: "POST",
+      body: {
+        name: $("#c-name").value,
+        streams: [
+          { name: "Flow 1", countries: $("#c-geo").value, redirect_url: $("#c-redirect").value },
+          { name: "Flow 2", offer_ids: [offerInput.offer.id] },
+        ],
+      },
+    });
+    show(box, "ok", `Кампания «${esc(campaign.name)}» создана (ID ${campaign.id}).<br>Ссылка: ${esc(campaign.url)}<br><a href="#" id="open-new">Открыть в редакторе офферов</a>`);
+    $("#open-new").addEventListener("click", (e) => { e.preventDefault(); selectedCampaign = campaign.id; openTab("edit"); });
+    $("#c-name").value = ""; offerInput.value = ""; offerInput.offer = null;
+  } catch (error) {
+    show(box, "err", esc(error.message));
+  } finally {
+    button.disabled = false;
+  }
+});
+
+const KT_ADMIN = "https://keitaro-for-tests.etolegko.com/admin/#!/campaign.editor/";
+let selectedCampaign = null;
+let streams = [];
+
+async function loadCampaigns() {
+  const select = $("#e-campaign");
+  try {
+    const campaigns = await api("/campaigns");
+    if (!campaigns.length) {
+      select.innerHTML = `<option value="">Кампаний пока нет</option>`;
+      $("#editor").innerHTML = "";
+      return;
+    }
+    if (!campaigns.some((c) => c.id === selectedCampaign)) selectedCampaign = campaigns[0].id;
+    select.innerHTML = campaigns.map((c) => `<option value="${c.id}"${c.id === selectedCampaign ? " selected" : ""}>[${c.id}] ${esc(c.name)}</option>`).join("");
+    await loadStreams();
+  } catch (error) {
+    show($("#edit-msg"), "err", esc(error.message));
+  }
+}
+
+$("#e-campaign").addEventListener("change", (event) => { selectedCampaign = +event.target.value; loadStreams(); });
+$("#fetch-btn").addEventListener("click", () => loadStreams(true));
+
+async function loadStreams(fetchFromKeitaro = false) {
+  const box = $("#edit-msg"), button = $("#fetch-btn");
+  box.hidden = true;
+  $("#kt-link").href = KT_ADMIN + selectedCampaign;
+  button.disabled = true;
+  try {
+    const path = `/campaigns/${selectedCampaign}/streams`;
+    streams = fetchFromKeitaro ? await api(`${path}/fetch`, { method: "POST" }) : await api(path);
+    renderStreams();
+  } catch (error) {
+    show(box, "err", esc(error.message));
+  } finally {
+    button.disabled = false;
+  }
+}
+
+function renderStreams() {
+  const editor = $("#editor");
+  if (!streams.length) {
+    editor.innerHTML = `<p class="muted">Потоки этой кампании ещё не загружены. Нажмите «Fetch streams from KT».</p>`;
+    return;
+  }
+  editor.innerHTML = streams.map((stream) => {
+    const title = `<div class="stream-title"><b>Stream: ${esc(stream.name)}</b><small>#${stream.position}, stream_id ${stream.keitaro_id}</small>`;
+    if (!stream.has_offers) return `<div class="stream-box">${title}</div></div>`;
+    const offers = [...stream.offers].sort((a, b) => a.removed - b.removed);
+    const active = offers.filter((o) => !o.removed);
+    const total = active.reduce((sum, o) => sum + o.share, 0);
+    return `<div class="stream-box${stream.is_dirty ? " dirty" : ""}" data-stream="${stream.id}">
+      ${title}${stream.is_dirty ? `<span class="badge">не опубликован</span>` : ""}</div>
+      ${stream.is_dirty ? `<div class="toolbar"><button class="btn blue" data-act="push">Push to KT</button><button class="btn" data-act="cancel">Cancel</button></div>` : ""}
+      ${offers.map((o) => `<div class="row-offer${o.removed ? " removed" : ""}">
+        <div class="offer-name"><span class="id">[${o.offer_id}]</span> ${esc(o.name)}${o.removed ? " (removed)" : ""}</div>
+        <div class="share">${o.share}%</div>
+        ${o.removed ? "<span></span>" : `<button class="pin${o.pinned ? " on" : ""}" data-act="pin" data-offer="${o.offer_id}" data-pinned="${o.pinned}" title="${o.pinned ? "Открепить долю" : "Закрепить долю"}">📌</button>`}
+        ${o.removed
+          ? `<button class="btn" data-act="restore" data-offer="${o.offer_id}">Bring back</button>`
+          : `<button class="btn red" data-act="remove" data-offer="${o.offer_id}"${active.length <= 1 ? ` disabled title="Последний оффер удалить нельзя"` : ""}>Remove</button>`}
+      </div>`).join("")}
+      <div class="total"><span>Активных офферов: ${active.length}</span><span>Сумма долей: ${total}%</span></div>
+      <div class="add"><div class="ac"><input placeholder="добавить оффер: поиск по названию или ID"></div><button class="btn blue" data-act="add">Add</button></div>
+    </div>`;
+  }).join("");
+
+  editor.querySelectorAll("[data-stream]").forEach((block) => {
+    const stream = streams.find((s) => String(s.id) === block.dataset.stream);
+    const input = block.querySelector("input");
+    attachOfferSearch(input, () => stream.offers.filter((o) => !o.removed).map((o) => o.offer_id));
+    block.querySelectorAll("[data-act]").forEach((button) => button.addEventListener("click", () => {
+      const base = `/streams/${stream.id}`, offer = button.dataset.offer, act = button.dataset.act;
+      if (act === "add") {
+        if (!input.offer) return show($("#edit-msg"), "err", "Выберите оффер из выпадающего списка");
+        return change(block, `${base}/offers`, { method: "POST", body: { offer_id: input.offer.id } });
+      }
+      if (act === "remove") return change(block, `${base}/offers/${offer}`, { method: "DELETE" });
+      if (act === "restore") return change(block, `${base}/offers/${offer}/restore`, { method: "POST" });
+      if (act === "pin") return change(block, `${base}/offers/${offer}`, { method: "PATCH", body: { pinned: button.dataset.pinned !== "true" } });
+      change(block, `${base}/${act}`, { method: "POST" });
+    }));
+  });
+}
+
+async function change(block, path, options) {
+  const box = $("#edit-msg");
+  box.hidden = true;
+  block.querySelectorAll("button").forEach((b) => (b.disabled = true));
+  try {
+    const updated = await api(path, options);
+    streams = streams.map((s) => (s.id === updated.id ? updated : s));
+  } catch (error) {
+    show(box, "err", esc(error.message));
+  }
+  renderStreams();
+}
+
+</script>
+</body>
+</html>
